@@ -33,14 +33,14 @@ export async function createFeedback(params: CreateFeedbackParams) {
         - **Problem-Solving**: Ability to analyze problems and propose solutions.
         - **Cultural & Role Fit**: Alignment with company values and job role.
         - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
-        `,
+      `,
       system:
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
     const feedback = {
-      interviewId: interviewId,
-      userId: userId,
+      interviewId,
+      userId,
       totalScore: object.totalScore,
       categoryScores: object.categoryScores,
       strengths: object.strengths,
@@ -49,33 +49,38 @@ export async function createFeedback(params: CreateFeedbackParams) {
       createdAt: new Date().toISOString(),
     };
 
-    let feedbackRef;
-
-    if (feedbackId) {
-      feedbackRef = db.collection("feedback").doc(feedbackId);
-    } else {
-      feedbackRef = db.collection("feedback").doc();
-    }
+    const feedbackRef = feedbackId
+      ? db.collection("feedback").doc(feedbackId)
+      : db.collection("feedback").doc();
 
     await feedbackRef.set(feedback);
 
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error) {
-    console.error("Error saving feedback:", error);
+    console.error("🔥 Error saving feedback:", error);
     return { success: false };
   }
 }
 
 export async function getInterviewById(id: string): Promise<Interview | null> {
-  const interview = await db.collection("interviews").doc(id).get();
+  if (!id) {
+    console.warn("⚠️ getInterviewById called with empty id");
+    return null;
+  }
 
-  return interview.data() as Interview | null;
+  const interview = await db.collection("interviews").doc(id).get();
+  return interview.exists ? (interview.data() as Interview) : null;
 }
 
 export async function getFeedbackByInterviewId(
   params: GetFeedbackByInterviewIdParams
 ): Promise<Feedback | null> {
   const { interviewId, userId } = params;
+
+  if (!interviewId || !userId) {
+    console.warn("⚠️ getFeedbackByInterviewId called with missing params");
+    return null;
+  }
 
   const querySnapshot = await db
     .collection("feedback")
@@ -95,6 +100,11 @@ export async function getLatestInterviews(
 ): Promise<Interview[] | null> {
   const { userId, limit = 20 } = params;
 
+  if (!userId) {
+    console.warn("⚠️ getLatestInterviews called with undefined userId");
+    return [];
+  }
+
   const interviews = await db
     .collection("interviews")
     .orderBy("createdAt", "desc")
@@ -109,14 +119,19 @@ export async function getLatestInterviews(
   })) as Interview[];
 }
 
-// ✅ UPDATED: Added filter for finalized interviews
+// ✅ SAFER VERSION
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
+  if (!userId) {
+    console.warn("⚠️ getInterviewsByUserId called with undefined userId");
+    return [];
+  }
+
   const interviews = await db
     .collection("interviews")
     .where("userId", "==", userId)
-    .where("finalized", "==", true)  // ✅ ADDED THIS LINE
+    .where("finalized", "==", true)
     .orderBy("createdAt", "desc")
     .get();
 
