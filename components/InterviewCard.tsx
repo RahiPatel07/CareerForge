@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
-import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
 
 const InterviewCard = async ({
@@ -26,84 +26,119 @@ const InterviewCard = async ({
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
 
-  const badgeColor =
-    {
-      Behavioral: "bg-light-400",
-      Mixed: "bg-light-600",
-      Technical: "bg-light-800",
-    }[normalizedType] || "bg-light-600";
+  const badgeColors = {
+    Behavioral: "from-purple-500 to-purple-600",
+    Mixed: "from-blue-500 to-indigo-600",
+    Technical: "from-cyan-500 to-blue-600",
+  };
+
+  const badgeColor = badgeColors[normalizedType as keyof typeof badgeColors] || badgeColors.Mixed;
 
   const formattedDate = dayjs(
     feedback?.createdAt || createdAt || Date.now()
   ).format("MMM D, YYYY");
 
+  const scoreColor = 
+    !feedback?.totalScore ? "text-text-muted" :
+    feedback.totalScore >= 80 ? "text-success-100" :
+    feedback.totalScore >= 60 ? "text-primary-200" :
+    "text-orange-500";
+
   return (
-    <div className="card-border w-[360px] max-sm:w-full min-h-96">
-      <div className="card-interview">
-        <div>
-          {/* Type Badge */}
-          <div
-            className={cn(
-              "absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg",
-              badgeColor
-            )}
-          >
-            <p className="badge-text ">{normalizedType}</p>
+    <div className="card-interview group">
+      {/* Animated Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-100/5 via-transparent to-accent-100/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+      <div className="relative z-10">
+        {/* Type Badge */}
+        <div className="absolute -top-6 -right-6">
+          <div className={cn(
+            "bg-gradient-to-r px-4 py-2 rounded-xl shadow-lg text-white font-bold text-sm",
+            `bg-gradient-to-r ${badgeColor}`
+          )}>
+            {normalizedType}
           </div>
-
-          {/* Cover Image */}
-          <Image
-            src={getRandomInterviewCover()}
-            alt="cover-image"
-            width={90}
-            height={90}
-            className="rounded-full object-fit size-[90px]"
-          />
-
-          {/* Interview Role */}
-          <h3 className="mt-5 capitalize">{role} Interview</h3>
-
-          {/* Date & Score */}
-          <div className="flex flex-row gap-5 mt-3">
-            <div className="flex flex-row gap-2">
-              <Image
-                src="/calendar.svg"
-                width={22}
-                height={22}
-                alt="calendar"
-              />
-              <p>{formattedDate}</p>
-            </div>
-
-            <div className="flex flex-row gap-2 items-center">
-              <Image src="/star.svg" width={22} height={22} alt="star" />
-              <p>{feedback?.totalScore || "---"}/100</p>
-            </div>
-          </div>
-
-          {/* Feedback or Placeholder Text */}
-          <p className="line-clamp-2 mt-5">
-            {feedback?.finalAssessment ||
-              "You haven't taken this interview yet. Take it now to improve your skills."}
-          </p>
         </div>
 
-        <div className="flex flex-row justify-between">
-          <DisplayTechIcons techStack={techstack} />
+        {/* AI Avatar with Glow Effect */}
+        <div className="relative w-20 h-20 mb-4">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-100/30 to-accent-100/30 rounded-2xl blur-xl group-hover:blur-2xl transition-all"></div>
+          <div className="relative w-full h-full bg-gradient-to-br from-primary-100 to-accent-100 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <Image
+              src="/ai-avatar.png"
+              alt="AI Interview"
+              width={60}
+              height={60}
+              className="object-contain"
+            />
+          </div>
+        </div>
 
-          <Button className="btn-primary">
-            <Link
-              href={
-                feedback
-                  ? `/interview/${interviewId}/feedback`
-                  : `/interview/${interviewId}`
-              }
-            >
-              {feedback ? "Check Feedback" : "View Interview"}
+        {/* Interview Title */}
+        <h3 className="text-xl font-bold capitalize mb-3 group-hover:text-primary-200 transition-colors">
+          {role} Interview
+        </h3>
+
+        {/* Date & Score */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-text-muted">📅</span>
+            <span className="text-text-secondary font-medium">{formattedDate}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-text-muted">⭐</span>
+            <span className={cn("font-bold text-lg", scoreColor)}>
+              {feedback?.totalScore || "—"}/100
+            </span>
+          </div>
+        </div>
+
+        {/* Score Progress Bar */}
+        {feedback?.totalScore && (
+          <div className="mb-4">
+            <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+              <div 
+                className={cn(
+                  "h-full rounded-full transition-all duration-1000",
+                  feedback.totalScore >= 80 ? "bg-gradient-to-r from-success-100 to-success-200" :
+                  feedback.totalScore >= 60 ? "bg-gradient-to-r from-primary-100 to-primary-200" :
+                  "bg-gradient-to-r from-orange-400 to-orange-500"
+                )}
+                style={{ width: `${feedback.totalScore}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Description */}
+        <p className="text-sm text-text-secondary line-clamp-3 mb-6 leading-relaxed">
+          {feedback?.finalAssessment ||
+            "Ready to test your skills? Take this interview to get personalized AI feedback and improve your performance."}
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="relative z-10 flex items-center justify-between pt-4 border-t border-border-light">
+        <DisplayTechIcons techStack={techstack} />
+
+        {feedback && interviewId ? (
+          <Button asChild className="btn-primary text-sm px-4 py-2">
+            <Link href={`/interview/${interviewId}/feedback`}>
+              <span className="mr-1">📊</span> View Feedback
             </Link>
           </Button>
-        </div>
+        ) : (
+          <Button asChild className="btn-secondary text-sm px-4 py-2">
+            <Link href="/interview">
+              <span className="mr-1">🚀</span> Start Now
+            </Link>
+          </Button>
+        )}
       </div>
+
+      {/* Hover Effect Border */}
+      <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary-200/30 transition-all duration-300 pointer-events-none"></div>
     </div>
   );
 };

@@ -109,12 +109,14 @@ export async function getLatestInterviews(
   })) as Interview[];
 }
 
+// ✅ UPDATED: Added filter for finalized interviews
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
   const interviews = await db
     .collection("interviews")
     .where("userId", "==", userId)
+    .where("finalized", "==", true)  // ✅ ADDED THIS LINE
     .orderBy("createdAt", "desc")
     .get();
 
