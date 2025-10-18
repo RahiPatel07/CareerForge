@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // ✅ Ensures the build works in standalone mode (needed for Render)
+  output: "standalone",
+
+  // ✅ Optional: if you want to serve images from external URLs (uncomment if needed)
   // images: {
   //   remotePatterns: [
   //     {
@@ -11,6 +14,7 @@ const nextConfig: NextConfig = {
   //     },
   //   ],
   // },
+
   eslint: {
     ignoreDuringBuilds: true,
   },

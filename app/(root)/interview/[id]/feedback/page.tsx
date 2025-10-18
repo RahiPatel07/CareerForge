@@ -108,7 +108,7 @@ const FeedbackPage = async ({ params }: PageProps) => {
                     <span className="text-2xl font-bold text-primary-200">
                       {category.score}
                     </span>
-                    <span className="text-text-muted">/10</span>
+                    <span className="text-text-muted">/100</span>
                   </div>
                 </div>
                 
